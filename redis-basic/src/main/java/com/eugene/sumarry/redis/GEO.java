@@ -9,7 +9,7 @@ import redis.clients.jedis.GeoUnit;
  * 然后利用redis的api来计算他们的直线距离
  *
  */
-public class GEO extends Base {
+public class GEO extends RedisBase {
 
     static class Location {
         double longitude;

@@ -1,6 +1,6 @@
 package com.eugene.sumarry.redis;
 
-public class Pipeline extends Base {
+public class Pipeline extends RedisBase {
 
     /**
      * 使用pipeline和不使用pipeline操作大量指令的区别

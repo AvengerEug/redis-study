@@ -11,7 +11,7 @@ package com.eugene.sumarry.redis;
  * c的二进制为1100011
  * 那么abc在底层存储的样子为: 110000111000101100011
  */
-public class Bitmaps extends Base {
+public class Bitmaps extends RedisBase {
 
     private static void modifiedBitmapsTest() {
         jedis.setbit("bitmapsTest", 6L, "1");

@@ -4,7 +4,7 @@ package com.eugene.sumarry.redis;
  * 基数统计算法:
  *  比如我们统计下某个key下有多少种不同的值
  */
-public class HypeLogLog extends Base {
+public class HypeLogLog extends RedisBase {
 
 
     /**
