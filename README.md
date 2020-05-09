@@ -126,7 +126,93 @@
   
   ```
 
+* 但使用上述的最终版本还是会问题，就是锁的超时时间的判断，我们不好来定义这个过期时间，因为有可能会太长也有可能会太短。所以此时我们需要一个`timer`。`timer`的作用就是一个定时器，在加锁的时候开一个子线程，设置一个时间点，当过了多少时间就延长下过期时间。这个功能已经被`redisson`框架实现了，默认是每隔`1/3`的时间就延长一下锁。所以此时可以使用`redisson`实现分布式锁
+
+## 五、redis集群
+
+### 5.1 主从复制
+
+* 主提供写服务，从提供读服务
+
+* 搭建步骤
+
+  ```txt
+  # 搭建redis集群的核心就是玩配置文件
+  1. 新建三个文件夹
+     eg: 
+     /usr/local/redis-master-slave/redis8000
+     /usr/local/redis-master-slave/redis8001
+     /usr/local/redis-master-slave/redis8002
+  2. 将redis.conf配置文件复制到redis8000文件夹下
+  3. 修改redis8000文件夹下的redis.conf文件的如下内容:
+      1. bind 0.0.0.0
+      2. port 8000
+      3. daemonize yes
+      4. pidfile /usr/local/redis-master-slave/redis8000.pid  
+      5. dir /usr/local/redis-master-slave/redis8000
+      6. requirepass 123456
+  4. 将redis8000文件夹下的redis.conf文件分别复制到redis8001、redis8002文件夹下
+  5. 修改redis8001文件夹下的redis.conf文件
+     1. 将内部所有的8000改成8001  ==> :%s/8000/8001/g    批量替换
+     2. 修改replicaof配置为: replicaof 主机的ip 主机的端口
+     3. 修改masterauth配置为: masterauth 123456    ===> 这里要和主机的密码一致
+  6. 修改redis8002文件夹下的redis.conf文件
+     1. 将内部所有的8000改成8002  ==> :%s/8000/8002/g    批量替换
+     2. 修改replicaof配置为: replicaof 主机的ip 主机的端口
+     3. 修改masterauth配置为: masterauth 123456    ===> 这里要和主机的密码一致
+  7. 分别启动三个redis服务
+     redis-server /usr/local/redis-master-slave/redis8000/redis.conf
+     redis-server /usr/local/redis-master-slave/redis8001/redis.conf
+     redis-server /usr/local/redis-master-slave/redis8002/redis.conf
+  8. 连接到对应的redis服务，使用 "info server"和"info replication"命令查看服务信息以及集群信息
+  9. 至此，redis主从复制集群搭建完成
   
+  其他相关:
+    1. 动态临时扩容slave节点
+       方式一: 临时的(节点重启就没了)
+         1. 在启动redis服务后执行"SLAVEOF <masterip> <masterport>"命令
+         2. CONFIG SET masterauth 123456 ===> 要保证和主节点密码一样
+       方式二: 持久性的
+         1. 跟上述第5步类似，修改配置文件
+  ```
 
+* 原理
 
+  ![主从复制原理](https://github.com/AvengerEug/redis-study/blob/develop/主从复制原理.png)
+
+### 5.2 哨兵模式
+
+* 主从复制的升级版，当master挂了后，不需要手动指定master，而是由哨兵自己从slave节点中选出一个master，并将其他的slave节点与master节点关联起来
+
+* 搭建步骤
+
+  ```txt
+  1. 基于上述 5.1主从复制 的步骤，修改redis8000文件夹下的redis.conf文件，修改masterauth属性为: masterauth 123456  ==> 原因: 因为在哨兵模式下，主有可能变从，从有可能变主，而在做主从集群时，从节点需要配置主节点认证的密码。
+  2. 分别创建三个文件夹
+     eg:
+     /usr/local/redis-sentinel/sentinel28000
+     /usr/local/redis-sentinel/sentinel28001
+     /usr/local/redis-sentinel/sentinel28002
+  3. 在redis安装目录中将sentinel.conf文件copy到sentinel28000文件夹内，并修改sentinel.conf文件如下配置
+     1. port 28000
+     2. daemonize yes
+     3. logfile "/usr/local/redis-sentinel/sentinel28000/sentinel.log"
+     4. sentinel monitor myMaster 主节点的ip地址 主节点的ip地址 2 #这句话的意思是: 当前哨兵监听一个叫myMaster的主节点, 最后面的2表示在三个哨兵中，若有2个哨兵认为这个主节点挂了，那么将进行故障转移，这个2一般为哨兵的数量 / 2 + 1
+  4. 将/usr/local/redis-sentinel/sentinel28000/sentinel.conf文件分别copy到sentinel28001文件夹内，并修改如下配置:
+     1. 将内部所有的28000修改成28001 ==>  :%s/28000/28001/g
+  5. 将/usr/local/redis-sentinel/sentinel28000/sentinel.conf文件分别copy到sentinel28002文件夹内，并修改如下配置:
+     1. 将内部所有的28000修改成28001 ==>  :%s/28000/28002/g
+  6. 分别启动三个哨兵服务并启动三个redis服务
+     redis-server /usr/local/redis-master-slave/redis8000/redis.conf
+     redis-server /usr/local/redis-master-slave/redis8001/redis.conf
+     redis-server /usr/local/redis-master-slave/redis8002/redis.conf
+  
+     redis-server /usr/local/redis-sentinel/sentinel28000/sentinel.conf
+     redis-server /usr/local/redis-sentinel/sentinel28001/sentinel.conf
+     redis-server /usr/local/redis-sentinel/sentinel28002/sentinel.conf
+     
+  7. 使用客户端连接哨兵，访问redis
+  ```
+
+  
 
