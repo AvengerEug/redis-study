@@ -132,7 +132,7 @@
 
 ### 5.1 主从复制
 
-* 主提供写服务，从提供读服务
+* 主提供写服务，从提供读服务 `一主多从`
 
 * 搭建步骤
 
@@ -179,10 +179,12 @@
 * 原理
 
   ![主从复制原理](https://github.com/AvengerEug/redis-study/blob/develop/主从复制原理.png)
+  
+* 主从模式官方说明链接：[http://www.redis.cn/topics/replication.html](http://www.redis.cn/topics/replication.html)
 
 ### 5.2 哨兵模式
 
-* 主从复制的升级版，当master挂了后，不需要手动指定master，而是由哨兵自己从slave节点中选出一个master，并将其他的slave节点与master节点关联起来
+* 主从复制的升级版(但还是`一主多从`)，当master挂了后，不需要手动指定master，而是由哨兵自己从slave节点中选出一个master，并将其他的slave节点与master节点关联起来
 
 * 搭建步骤
 
@@ -207,12 +209,92 @@
      redis-server /usr/local/redis-master-slave/redis8001/redis.conf
      redis-server /usr/local/redis-master-slave/redis8002/redis.conf
   
-     redis-server /usr/local/redis-sentinel/sentinel28000/sentinel.conf
-     redis-server /usr/local/redis-sentinel/sentinel28001/sentinel.conf
-     redis-server /usr/local/redis-sentinel/sentinel28002/sentinel.conf
+     redis-sentinel /usr/local/redis-sentinel/sentinel28000/sentinel.conf
+     redis-sentinel /usr/local/redis-sentinel/sentinel28001/sentinel.conf
+     redis-sentinel /usr/local/redis-sentinel/sentinel28002/sentinel.conf
      
   7. 使用客户端连接哨兵，访问redis
   ```
 
-  
+* 哨兵模式原理图
 
+  ![哨兵模式原理](https://github.com/AvengerEug/redis-study/blob/develop/哨兵模式原理.png)
+  
+* 哨兵模式官网说明链接: [http://www.redis.cn/topics/sentinel.html](http://www.redis.cn/topics/sentinel.html)
+
+### 5.3 Redis-Cluster
+
+* Redis高可用集群方式，比较受欢迎的一种集群方式
+
+* 3主6从结构搭建步骤(为什么选择3主6从呢？因为想测试下--cluster-replicas参数的含义，此参数表示的是每个主节点携带的从节点个数)
+
+  ```txt
+  1. 新建9个文件夹分别为:
+    mkdir -p  \
+    /usr/local/redis-cluster/7000 \
+    /usr/local/redis-cluster/7001 \
+    /usr/local/redis-cluster/7002 \
+    /usr/local/redis-cluster/7003 \
+    /usr/local/redis-cluster/7004
+    
+    mkdir -p \
+    /usr/local/redis-cluster/7005 \
+    /usr/local/redis-cluster/7006 \
+    /usr/local/redis-cluster/7007 \
+    /usr/local/redis-cluster/7008
+  2. 拷贝文件redis.conf文件至/usr/local/redis-cluster/7000中
+  3. 修改redis.conf配置文件为如下内容：
+     1. daemonize yes
+     2. port 7000
+     3. bind 192.168.111.153  # 当前机器的ip
+     4. dir /usr/local/redis-cluster/7000
+     5. cluster-enabled yes
+     6. cluster-config-file nodes-7000.conf #当集群搭建成功后会在此文件中存储集群的相关信息
+     7. cluster-node-timeout 5000 #配置节点连接超时时间
+     8. appendonly yes  #启动aof机制
+     9. appendfilename "appendonly-7000.aof"
+     10. masterauth 123456
+     11. requirepass 123456
+  4. 使用命令生成7001-7008的文件夹中的redis.conf文件
+     1. sed 's/7000/7001/g' /usr/local/redis-cluster/7000/redis.conf > /usr/local/redis-cluster/7001/redis.conf
+     2. sed 's/7000/7002/g' /usr/local/redis-cluster/7000/redis.conf > /usr/local/redis-cluster/7002/redis.conf
+     3. sed 's/7000/7003/g' /usr/local/redis-cluster/7000/redis.conf > /usr/local/redis-cluster/7003/redis.conf
+     4. sed 's/7000/7004/g' /usr/local/redis-cluster/7000/redis.conf > /usr/local/redis-cluster/7004/redis.conf
+     5. sed 's/7000/7005/g' /usr/local/redis-cluster/7000/redis.conf > /usr/local/redis-cluster/7005/redis.conf
+     6. sed 's/7000/7006/g' /usr/local/redis-cluster/7000/redis.conf > /usr/local/redis-cluster/7006/redis.conf
+     7. sed 's/7000/7007/g' /usr/local/redis-cluster/7000/redis.conf > /usr/local/redis-cluster/7007/redis.conf
+     8. sed 's/7000/7008/g' /usr/local/redis-cluster/7000/redis.conf > /usr/local/redis-cluster/7008/redis.conf
+  5. 分别启动上述9个redis实例
+     redis-server /usr/local/redis-cluster/7000/redis.conf
+     redis-server /usr/local/redis-cluster/7001/redis.conf
+     redis-server /usr/local/redis-cluster/7002/redis.conf
+     redis-server /usr/local/redis-cluster/7003/redis.conf
+     redis-server /usr/local/redis-cluster/7004/redis.conf
+     redis-server /usr/local/redis-cluster/7005/redis.conf
+     redis-server /usr/local/redis-cluster/7006/redis.conf
+     redis-server /usr/local/redis-cluster/7007/redis.conf
+     redis-server /usr/local/redis-cluster/7008/redis.conf
+  6. 执行集群命令
+     redis-cli --cluster create 192.168.111.153:7000 192.168.111.153:7001 192.168.111.153:7002 192.168.111.153:7003 192.168.111.153:7004 192.168.111.153:7005 192.168.111.153:7006 192.168.111.153:7007 192.168.111.153:7008 --cluster-replicas 2 -a 123456
+     ==> 按照一定的顺序，比如设置了--cluster-replicas的参数为2，则表示每个主节点有2个从节点，同时redis会计算命令中的节点个数，因为redis-cluster至少是需要3个主节点的。所以会将前面三个ip+port的组合当成主节点，然后去计算 3 * 2 = 6, 最后去验证后面是否有6个从节点，如果无则启动集群失败。
+  7. 验证
+     1. 登录
+       redis-cli -c -h 192.168.111.153 -p 7001 -a 123456
+     2. 设置值
+       set k1 v1
+     3. redis-cli -c -h 192.168.111.153 -p 7008 -a 123456
+       get k1
+     获取值成功则表示集群搭建成功
+  8. 查看节点信息
+     redis-cli -c -h 192.168.111.153 -p 7001 -a 123456 cluster nodes
+     ===> 能看到当前在哪个节点上，也能看到每个节点分配的槽位、节点的id、节点的角色、从节点跟随哪个主节点等等
+     
+  注意点：
+     集群搭建好后，会将集群信息写入上述配置的 cluster-config-file属性的文件内，就算redis服务重启后，redis还是能根据文件内的属性将集群重新还原
+  ```
+
+* redis-cluster原理图
+
+  ![redis-cluster原理](https://github.com/AvengerEug/redis-study/blob/develop/redis-cluster原理.png)
+
+* redis-cluster官网说明链接：[http://www.redis.cn/topics/cluster-tutorial.html](http://www.redis.cn/topics/cluster-tutorial.html)
