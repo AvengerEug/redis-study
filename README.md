@@ -20,7 +20,7 @@
   要想了解这句话，先看下图:
     ```
 
-  ![布隆过滤器原理](https://github.com/AvengerEug/redis-study/blob/develop/布隆过滤器原理.png)
+  ![布隆过滤器原理](./布隆过滤器原理.png)
 
   大致的意思就是: 在一个二进制向量中，我们把一些数据放入至布隆过滤器中。在放入的过程中，每个key会执行N个hash函数，然后将hash之后返回的值对应的槽位上标志为1(eg: hash后的值为10，则在第十个槽上表示为1)。这样，一个key可能在二进制向量中有N个标识。所以当我们要校验，一个key是否在布隆过滤器中时，我们可以把key按照同样的逻辑，进行N个hash，然后校验下N个hash后的值对应的槽是否为1，如果都为1，我们则认为它`可能存在`。如果存在有0，那么它一定不存在。这里说明下，为什么都为1的情况下只是可能存在。`因为hash具有概率性，也就是说不同的key执行hash后有可能返回的值是一样的，这样就发生了hash碰撞。所以二进制向量中某个位置为1，有可能是多个key都会使用上它`
 
@@ -178,7 +178,7 @@
 
 * 原理
 
-  ![主从复制原理](https://github.com/AvengerEug/redis-study/blob/develop/主从复制原理.png)
+  ![主从复制原理](./主从复制原理.png)
   
 * 主从模式官方说明链接：[http://www.redis.cn/topics/replication.html](http://www.redis.cn/topics/replication.html)
 
@@ -218,7 +218,7 @@
 
 * 哨兵模式原理图
 
-  ![哨兵模式原理](https://github.com/AvengerEug/redis-study/blob/develop/哨兵模式原理.png)
+  ![哨兵模式原理](./哨兵模式原理.png)
   
 * 哨兵模式官网说明链接: [http://www.redis.cn/topics/sentinel.html](http://www.redis.cn/topics/sentinel.html)
 
@@ -295,6 +295,6 @@
 
 * redis-cluster原理图
 
-  ![redis-cluster原理](https://github.com/AvengerEug/redis-study/blob/develop/redis-cluster原理.png)
+  ![redis-cluster原理](./redis-cluster原理.png)
 
 * redis-cluster官网说明链接：[http://www.redis.cn/topics/cluster-tutorial.html](http://www.redis.cn/topics/cluster-tutorial.html)
