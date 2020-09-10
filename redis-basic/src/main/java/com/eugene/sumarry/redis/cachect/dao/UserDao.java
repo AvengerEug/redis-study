@@ -1,6 +1,6 @@
-package com.eugene.sumarry.redis.cachejc.dao;
+package com.eugene.sumarry.redis.cachect.dao;
 
-import com.eugene.sumarry.redis.cachejc.model.User;
+import com.eugene.sumarry.redis.cachect.model.User;
 
 public class UserDao extends DaoTemplate<User> {
 

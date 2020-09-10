@@ -1,7 +1,7 @@
-package com.eugene.sumarry.redis.cachejc;
+package com.eugene.sumarry.redis.cachect;
 
-import com.eugene.sumarry.redis.cachejc.dao.UserDao;
-import com.eugene.sumarry.redis.cachejc.model.User;
+import com.eugene.sumarry.redis.cachect.dao.UserDao;
+import com.eugene.sumarry.redis.cachect.model.User;
 
 /**
  * 测试缓存击穿

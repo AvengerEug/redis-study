@@ -1,4 +1,4 @@
-package com.eugene.sumarry.redis.cachejc.dao;
+package com.eugene.sumarry.redis.cachect.dao;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;

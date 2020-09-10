@@ -1,4 +1,4 @@
-package com.eugene.sumarry.redis.cachejc.model;
+package com.eugene.sumarry.redis.cachect.model;
 
 public class User {
 
