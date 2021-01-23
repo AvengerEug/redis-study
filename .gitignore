@@ -1,5 +1,5 @@
 target
 *.iml
-.settings
+.idea
 .project
-.classpath
+.settings
