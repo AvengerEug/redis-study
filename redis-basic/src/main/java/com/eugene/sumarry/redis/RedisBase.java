@@ -13,6 +13,6 @@ public class RedisBase {
 
     static {
 
-        jedis = new JedisPool("192.168.111.145", 6379).getResource();
+        jedis = new JedisPool("127.0.0.1", 6379).getResource();
     }
 }
